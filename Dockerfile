@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.16-alpine
+FROM golang:1.16
 
 WORKDIR /app
 
@@ -11,6 +11,6 @@ RUN go mod download
 
 COPY *.go ./
 
-RUN go build -o /sonarqube-exporter
+RUN go build -o sonarqube-exporter
 
-CMD ["/sonarqube-exporter"]
+CMD ["./sonarqube-exporter"]

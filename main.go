@@ -26,6 +26,12 @@ var (
 		"SonarQube Health Status",
 		nil, nil,
 	)
+
+	activityStatus = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "activity_status"),
+		"SonarQube Activity Status",
+		[]string{"metric"}, nil,
+	)
 )
 
 type Exporter struct {
@@ -43,10 +49,11 @@ func NewExporter(sonarEndpoint string, sonarUsername string, sonarPassword strin
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- up
 	ch <- healthStatus
+	ch <- activityStatus
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	health, err := e.GatherSonarMetrics()
+	health, err := e.GatherSonarHealth()
 
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(
@@ -62,9 +69,25 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(
 		healthStatus, prometheus.GaugeValue, health,
 	)
+
+	as, err := e.GatherSonarActivityStatus()
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		ch <- prometheus.MustNewConstMetric(
+			activityStatus, prometheus.GaugeValue, float64(as.Pending), "pending",
+		)
+		ch <- prometheus.MustNewConstMetric(
+			activityStatus, prometheus.GaugeValue, float64(as.Failing), "failing",
+		)
+		ch <- prometheus.MustNewConstMetric(
+			activityStatus, prometheus.GaugeValue, float64(as.InProgress), "inProgress",
+		)
+	}
 }
 
-func (e *Exporter) GatherSonarMetrics() (float64, error) {
+func (e *Exporter) GatherSonarHealth() (float64, error) {
 	client, err := sonargo.NewClient(e.sonarEndpoint+"/api", e.sonarUsername, e.sonarPassword)
 	if err != nil {
 		return 0.0, err
@@ -82,6 +105,15 @@ func (e *Exporter) GatherSonarMetrics() (float64, error) {
 	}
 
 	return 0.0, nil
+}
+
+func (e *Exporter) GatherSonarActivityStatus() (*ActivityStatus, error) {
+	client, err := NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.ActivityStatus()
 }
 
 func main() {
