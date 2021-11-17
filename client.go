@@ -85,16 +85,22 @@ type SystemInfo struct {
 }
 
 type Statistics struct {
-	Id              string            `json: "id"`
-	UserCount       uint              `json: "userCount"`
-	ProjectCount    uint              `json: "projectCount"`
-	Ncloc           uint              `json: "ncloc"`
-	NclocByLanguage []NclocByLanguage `json: "nclocByLanguage`
+	Id                     string                   `json: "id"`
+	UserCount              uint                     `json: "userCount"`
+	ProjectCount           uint                     `json: "projectCount"`
+	Ncloc                  uint                     `json: "ncloc"`
+	NclocByLanguage        []NclocByLanguage        `json: "nclocByLanguage`
+	ProjectCountByLanguage []ProjectCountByLanguage `json: "projectCountByLanguage"`
 }
 
 type NclocByLanguage struct {
 	Language string `json: "language"`
 	Ncloc    uint   `json: "ncloc"`
+}
+
+type ProjectCountByLanguage struct {
+	Language string `json: "language"`
+	Count    uint   `json: "count"`
 }
 
 func (c *Client) SystemInfo() (*SystemInfo, error) {

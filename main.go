@@ -44,6 +44,12 @@ var (
 		"SonarQube Code Demographics",
 		[]string{"lang"}, nil,
 	)
+
+	projectCountDemographics = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "project_count_demographics"),
+		"SonarQube Project Count Demographics",
+		[]string{"lang"}, nil,
+	)
 )
 
 type Exporter struct {
@@ -64,6 +70,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- activityStatus
 	ch <- generalStats
 	ch <- codeDemographics
+	ch <- projectCountDemographics
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
@@ -118,6 +125,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		for _, n := range re.Statistics.NclocByLanguage {
 			ch <- prometheus.MustNewConstMetric(
 				codeDemographics, prometheus.GaugeValue, float64(n.Ncloc), n.Language,
+			)
+		}
+
+		for _, n := range re.Statistics.ProjectCountByLanguage {
+			ch <- prometheus.MustNewConstMetric(
+				projectCountDemographics, prometheus.GaugeValue, float64(n.Count), n.Language,
 			)
 		}
 	}
