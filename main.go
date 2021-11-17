@@ -32,6 +32,18 @@ var (
 		"SonarQube Activity Status",
 		[]string{"metric"}, nil,
 	)
+
+	generalStats = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "general_stats"),
+		"SonarQube General Statistics",
+		[]string{"metric"}, nil,
+	)
+
+	codeDemographics = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "code_demographics"),
+		"SonarQube Code Demographics",
+		[]string{"lang"}, nil,
+	)
 )
 
 type Exporter struct {
@@ -50,6 +62,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- up
 	ch <- healthStatus
 	ch <- activityStatus
+	ch <- generalStats
+	ch <- codeDemographics
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
@@ -85,6 +99,28 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			activityStatus, prometheus.GaugeValue, float64(as.InProgress), "inProgress",
 		)
 	}
+
+	re, err := e.GatherSystemInfo()
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		ch <- prometheus.MustNewConstMetric(
+			generalStats, prometheus.GaugeValue, float64(re.Statistics.UserCount), "UserCount",
+		)
+		ch <- prometheus.MustNewConstMetric(
+			generalStats, prometheus.GaugeValue, float64(re.Statistics.ProjectCount), "ProjectCount",
+		)
+		ch <- prometheus.MustNewConstMetric(
+			generalStats, prometheus.GaugeValue, float64(re.Statistics.Ncloc), "NCLoC",
+		)
+
+		for _, n := range re.Statistics.NclocByLanguage {
+			ch <- prometheus.MustNewConstMetric(
+				codeDemographics, prometheus.GaugeValue, float64(n.Ncloc), n.Language,
+			)
+		}
+	}
 }
 
 func (e *Exporter) GatherSonarHealth() (float64, error) {
@@ -114,6 +150,15 @@ func (e *Exporter) GatherSonarActivityStatus() (*ActivityStatus, error) {
 	}
 
 	return client.ActivityStatus()
+}
+
+func (e *Exporter) GatherSystemInfo() (*SystemInfo, error) {
+	client, err := NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.SystemInfo()
 }
 
 func main() {

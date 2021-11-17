@@ -79,3 +79,38 @@ func (c *Client) ActivityStatus() (*ActivityStatus, error) {
 
 	return &as, nil
 }
+
+type SystemInfo struct {
+	Statistics Statistics
+}
+
+type Statistics struct {
+	Id              string            `json: "id"`
+	UserCount       uint              `json: "userCount"`
+	ProjectCount    uint              `json: "projectCount"`
+	Ncloc           uint              `json: "ncloc"`
+	NclocByLanguage []NclocByLanguage `json: "nclocByLanguage`
+}
+
+type NclocByLanguage struct {
+	Language string `json: "language"`
+	Ncloc    uint   `json: "ncloc"`
+}
+
+func (c *Client) SystemInfo() (*SystemInfo, error) {
+	b, err := c.newRequest(http.MethodGet, "api/system/info")
+
+	result := SystemInfo{}
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, &result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
