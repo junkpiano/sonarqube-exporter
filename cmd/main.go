@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"sonarqube-exporter/internal/api"
+	"github.com/junkpiano/sonarqube-exporter/internal/api"
 
 	sonargo "github.com/magicsong/sonargo/sonar"
 

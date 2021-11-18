@@ -1,4 +1,4 @@
-module sonarqube-exporter
+module github.com/junkpiano/sonarqube-exporter
 
 go 1.16
 
