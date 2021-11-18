@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"sonarqube-exporter/internal/api"
+
 	sonargo "github.com/magicsong/sonargo/sonar"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -156,8 +159,8 @@ func (e *Exporter) GatherSonarHealth() (float64, error) {
 	return 0.0, nil
 }
 
-func (e *Exporter) GatherSonarActivityStatus() (*ActivityStatus, error) {
-	client, err := NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+func (e *Exporter) GatherSonarActivityStatus() (*api.ActivityStatus, error) {
+	client, err := api.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +168,8 @@ func (e *Exporter) GatherSonarActivityStatus() (*ActivityStatus, error) {
 	return client.ActivityStatus()
 }
 
-func (e *Exporter) GatherSystemInfo() (*SystemInfo, error) {
-	client, err := NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+func (e *Exporter) GatherSystemInfo() (*api.SystemInfo, error) {
+	client, err := api.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
 	if err != nil {
 		return nil, err
 	}

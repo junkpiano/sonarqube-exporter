@@ -9,8 +9,8 @@ COPY go.sum ./
 
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
-RUN go build -o sonarqube-exporter
+RUN go build -o sonarqube-exporter cmd/main.go
 
 CMD ["./sonarqube-exporter"]
