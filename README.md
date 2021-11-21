@@ -1,5 +1,6 @@
 SonarQube Exporter
 ========================
+[![Go Reference](https://pkg.go.dev/badge/github.com/junkpiano/sonarqube-exporter.svg)](https://pkg.go.dev/github.com/junkpiano/sonarqube-exporter)
 
 SonarQube Exporter for Prometheus
 
