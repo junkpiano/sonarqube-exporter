@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
+	"github.com/junkpiano/sonarqube-exporter/internal"
 	"github.com/junkpiano/sonarqube-exporter/internal/api"
-
-	sonargo "github.com/magicsong/sonargo/sonar"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -53,6 +53,12 @@ var (
 		"SonarQube Project Count Demographics",
 		[]string{"lang"}, nil,
 	)
+
+	searchStatus = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "search_status"),
+		"SonarQube Search State",
+		[]string{"metric"}, nil,
+	)
 )
 
 type Exporter struct {
@@ -77,7 +83,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	health, err := e.GatherSonarHealth()
+	re, err := e.GatherSystemInfo()
 
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(
@@ -91,7 +97,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		healthStatus, prometheus.GaugeValue, health,
+		healthStatus, prometheus.GaugeValue, internal.ConvertStatusToFloat(re.Health),
 	)
 
 	as, err := e.GatherSonarActivityStatus()
@@ -109,8 +115,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			activityStatus, prometheus.GaugeValue, float64(as.InProgress), "inProgress",
 		)
 	}
-
-	re, err := e.GatherSystemInfo()
 
 	if err != nil {
 		log.Println(err)
@@ -137,26 +141,24 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			)
 		}
 	}
-}
 
-func (e *Exporter) GatherSonarHealth() (float64, error) {
-	client, err := sonargo.NewClient(e.sonarEndpoint+"/api", e.sonarUsername, e.sonarPassword)
-	if err != nil {
-		return 0.0, err
+	ch <- prometheus.MustNewConstMetric(
+		searchStatus, prometheus.GaugeValue, internal.ConvertStatusToFloat(re.SearchState.State), "Health",
+	)
+
+	ch <- prometheus.MustNewConstMetric(
+		searchStatus, prometheus.GaugeValue, float64(re.SearchState.CPUUsage), "CPU Usage",
+	)
+
+	sComps := strings.Split(re.SearchState.DiskAvailable, " ")
+
+	if len(sComps) > 0 {
+		if val, err := strconv.ParseFloat(sComps[0], 64); err == nil {
+			ch <- prometheus.MustNewConstMetric(
+				searchStatus, prometheus.GaugeValue, float64(val), "Disk Available",
+			)
+		}
 	}
-
-	v, _, err := client.System.Health()
-	if err != nil {
-		return 0.0, err
-	}
-
-	fmt.Println(v.Health)
-
-	if v.Health == "GREEN" {
-		return 1.0, nil
-	}
-
-	return 0.0, nil
 }
 
 func (e *Exporter) GatherSonarActivityStatus() (*api.ActivityStatus, error) {

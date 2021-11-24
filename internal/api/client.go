@@ -57,9 +57,9 @@ func (c *Client) newRequest(method, path string) ([]byte, error) {
 }
 
 type ActivityStatus struct {
-	Pending    int `json: "pending"`
-	Failing    int `json: "failing`
-	InProgress int `json: "inProgress"`
+	Pending    int `json:"pending"`
+	Failing    int `json:"failing`
+	InProgress int `json:"inProgress"`
 }
 
 func (c *Client) ActivityStatus() (*ActivityStatus, error) {
@@ -81,26 +81,34 @@ func (c *Client) ActivityStatus() (*ActivityStatus, error) {
 }
 
 type SystemInfo struct {
-	Statistics Statistics
+	Health      string
+	Statistics  Statistics
+	SearchState SearchState `json:"Search State"`
 }
 
 type Statistics struct {
-	Id                     string                   `json: "id"`
-	UserCount              uint                     `json: "userCount"`
-	ProjectCount           uint                     `json: "projectCount"`
-	Ncloc                  uint                     `json: "ncloc"`
-	NclocByLanguage        []NclocByLanguage        `json: "nclocByLanguage`
-	ProjectCountByLanguage []ProjectCountByLanguage `json: "projectCountByLanguage"`
+	Id                     string                   `json:"id"`
+	UserCount              uint                     `json:"userCount"`
+	ProjectCount           uint                     `json:"projectCount"`
+	Ncloc                  uint                     `json:"ncloc"`
+	NclocByLanguage        []NclocByLanguage        `json:"nclocByLanguage`
+	ProjectCountByLanguage []ProjectCountByLanguage `json:"projectCountByLanguage"`
 }
 
 type NclocByLanguage struct {
-	Language string `json: "language"`
-	Ncloc    uint   `json: "ncloc"`
+	Language string `json:"language"`
+	Ncloc    uint   `json:"ncloc"`
 }
 
 type ProjectCountByLanguage struct {
-	Language string `json: "language"`
-	Count    uint   `json: "count"`
+	Language string `json:"language"`
+	Count    uint   `json:"count"`
+}
+
+type SearchState struct {
+	State         string
+	DiskAvailable string `json:"Disk Available"`
+	CPUUsage      int    `json:"CPU Usage (%)"`
 }
 
 func (c *Client) SystemInfo() (*SystemInfo, error) {
