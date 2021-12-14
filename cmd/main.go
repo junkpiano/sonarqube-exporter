@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/junkpiano/sonarqube-exporter/internal"
-	"github.com/junkpiano/sonarqube-exporter/internal/api"
+
+	"github.com/junkpiano/gosq"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -143,14 +144,14 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		searchStatus, prometheus.GaugeValue, internal.ConvertStatusToFloat(re.SearchState.State), "Health",
+		searchStatus, prometheus.GaugeValue, internal.ConvertStatusToFloat(re.Search_State.State), "Health",
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		searchStatus, prometheus.GaugeValue, float64(re.SearchState.CPUUsage), "CPU Usage",
+		searchStatus, prometheus.GaugeValue, float64(re.Search_State.CPU_Usage), "CPU Usage",
 	)
 
-	sComps := strings.Split(re.SearchState.DiskAvailable, " ")
+	sComps := strings.Split(re.Search_State.Disk_Available, " ")
 
 	if len(sComps) > 0 {
 		if val, err := strconv.ParseFloat(sComps[0], 64); err == nil {
@@ -161,8 +162,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (e *Exporter) GatherSonarActivityStatus() (*api.ActivityStatus, error) {
-	client, err := api.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+func (e *Exporter) GatherSonarActivityStatus() (*gosq.ActivityStatus, error) {
+	client, err := gosq.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +171,8 @@ func (e *Exporter) GatherSonarActivityStatus() (*api.ActivityStatus, error) {
 	return client.ActivityStatus()
 }
 
-func (e *Exporter) GatherSystemInfo() (*api.SystemInfo, error) {
-	client, err := api.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
+func (e *Exporter) GatherSystemInfo() (*gosq.SystemInfo, error) {
+	client, err := gosq.NewClient(e.sonarEndpoint, e.sonarUsername, e.sonarPassword)
 	if err != nil {
 		return nil, err
 	}
